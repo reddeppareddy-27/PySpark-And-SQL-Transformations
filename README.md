@@ -163,3 +163,207 @@ Mastering DataFrame operations and SQL transformations is critical before design
 Undergraduate student focused on becoming a Data Engineer by building strong fundamentals in distributed data processing systems.
 
 ---
+
+I analyzed the three notebooks you uploaded:
+
+1. **Types Of Data.ipynb** – Working with PySpark data types and transformations
+2. **Aggregators - PySpark & SQL.ipynb** – Aggregation operations and window functions
+3. **Complex Types In PySpark.ipynb** – Arrays, Structs, and JSON handling
+
+Below is a **clean, professional `README.md`** suitable for a **GitHub repository**.
+
+---
+
+# PySpark Data Transformations and Data Types
+
+This repository contains hands-on examples demonstrating how to work with **different data types, aggregation operations, and complex data structures in PySpark** using both **PySpark DataFrame APIs and Spark SQL**.
+
+The notebooks are designed to help learners understand how data transformations are performed in distributed data processing environments.
+
+---
+
+# Repository Structure
+
+```
+.
+├── Types Of Data.ipynb
+├── Aggregators - PySpark & SQL.ipynb
+├── Complex Types In PySpark.ipynb
+└── README.md
+```
+
+Each notebook focuses on a specific area of PySpark data processing.
+
+---
+
+# 1. Working with Different Data Types
+
+Notebook: **Types Of Data.ipynb**
+
+This notebook demonstrates how PySpark handles common data types and transformations while working with datasets.
+
+### Topics Covered
+
+* Boolean filtering operations
+* Numeric functions and calculations
+* String transformations
+* Regular Expressions (Regex)
+* Date and Timestamp functions
+* Null value handling
+
+### Key PySpark Functions
+
+```
+where()
+lower()
+upper()
+trim()
+substring()
+split()
+coalesce()
+fill()
+drop()
+```
+
+### SQL Equivalents
+
+The notebook also demonstrates how the same operations can be implemented using **Spark SQL queries**.
+
+Example:
+
+```sql
+SELECT *
+FROM samples.bakehouse.sales_transactions
+WHERE paymentMethod != 'mastercard'
+```
+
+This helps in understanding the differences between **DataFrame API and SQL-based transformations**.
+
+---
+
+# 2. Aggregations in PySpark and SQL
+
+Notebook: **Aggregators - PySpark & SQL.ipynb**
+
+This notebook focuses on performing **data aggregation and analytical computations** using PySpark.
+
+### Basic Aggregations
+
+* `count()`
+* `min()`
+* `max()`
+* `sum()`
+* `avg()`
+
+### Grouped Aggregations
+
+Using:
+
+```
+groupBy()
+agg()
+```
+
+Example use cases include summarizing transactional data and computing metrics.
+
+### Advanced Aggregations
+
+The notebook also introduces **Window Functions**, which are widely used in analytical pipelines.
+
+Functions covered include:
+
+```
+row_number()
+rank()
+dense_rank()
+```
+
+### Use Cases
+
+* Ranking records
+* Finding top values
+* Deduplication logic
+* Analytical computations
+
+Both **PySpark implementations and Spark SQL equivalents** are demonstrated.
+
+---
+
+# 3. Working with Complex Data Types
+
+Notebook: **Complex Types In PySpark.ipynb**
+
+Modern data platforms often handle **semi-structured and nested data**. This notebook explores how PySpark processes complex data types.
+
+### Complex Data Types Covered
+
+* Arrays
+* Structs
+* JSON
+
+### Array Operations
+
+```
+size()
+array_contains()
+split()
+explode()
+```
+
+These functions allow efficient manipulation of array-based columns.
+
+### Struct Operations
+
+Nested fields can be accessed using **dot notation**.
+
+Example:
+
+```
+info.age
+info.city
+```
+
+### JSON Processing
+
+The notebook demonstrates how to extract and convert JSON data using:
+
+```
+get_json_object()
+from_json()
+```
+
+This allows JSON strings to be transformed into **structured columns** for easier querying and analysis.
+
+---
+
+# Technologies Used
+
+* PySpark
+* Spark SQL
+* Databricks Notebook Environment
+
+---
+
+# Learning Objectives
+
+Through these notebooks, you will learn how to:
+
+* Perform data transformations using PySpark
+* Apply aggregation operations on large datasets
+* Use window functions for analytical queries
+* Work with nested and semi-structured data
+* Implement both **PySpark and SQL approaches** to data processing
+
+---
+
+# Use Case
+
+These examples simulate real-world data engineering scenarios such as:
+
+* Transaction data analysis
+* Data transformation pipelines
+* Processing nested and semi-structured datasets
+* Analytical computations on distributed data systems
+
+---
+
