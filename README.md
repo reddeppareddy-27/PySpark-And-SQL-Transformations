@@ -367,3 +367,486 @@ These examples simulate real-world data engineering scenarios such as:
 
 ---
 
+
+---
+
+# Modern Data Engineering with Delta Lake, PySpark & DQX on Databricks
+
+## Project Overview
+
+This project demonstrates several **modern Data Engineering concepts using PySpark, Delta Lake, and Databricks**. It explores how scalable data pipelines are built using the **Lakehouse architecture**, including **data quality validation, incremental processing, and performance optimization**.
+
+The project covers:
+
+* Delta Lake table operations
+* Change Data Feed (CDF)
+* Data Quality Framework using DQX
+* Medallion Architecture
+* Partitioning and Liquid Clustering
+* Delta Lake optimization techniques
+* Data transformation with PySpark
+
+These implementations simulate **real-world data engineering workflows used in modern cloud data platforms**.
+
+---
+
+# Architecture
+
+The project follows the **Medallion Architecture** commonly used in Databricks.
+
+Bronze → Silver → Gold
+
+Bronze Layer
+Raw data ingestion from source systems.
+
+Silver Layer
+Data cleansing, validation, and transformation.
+
+Gold Layer
+Curated datasets optimized for analytics and reporting.
+
+Data Quality checks using **DQX** ensure reliable data as it moves through the pipeline.
+
+---
+
+# Technologies Used
+
+* PySpark
+* Delta Lake
+* Databricks
+* Databricks Labs DQX
+* SQL
+* YAML
+* Medallion Architecture
+
+---
+
+# Key Concepts Implemented
+
+## Delta Lake Features
+
+* ACID transactions
+* Schema evolution
+* Time travel
+* Table restore
+* Merge (upsert) operations
+* Optimize and Z-Ordering
+* Vacuum cleanup
+
+---
+
+## Change Data Feed (CDF)
+
+Change Data Feed tracks **row-level changes** in Delta tables.
+
+It captures:
+
+* INSERT
+* UPDATE
+* DELETE
+
+This enables **incremental pipelines instead of full table processing**.
+
+---
+
+## Data Quality Framework (DQX)
+
+The Databricks Labs **DQX framework** was used to implement automated data validation.
+
+Capabilities include:
+
+* Data profiling
+* Rule generation
+* Row-level validation
+* Column-level validation
+* Quarantine of bad records
+
+---
+
+## Handling Bad Data
+
+Two approaches were explored.
+
+### Quarantine
+
+Invalid records are separated for investigation.
+
+### Flagging
+
+Records remain in the dataset but are marked with quality indicators.
+
+---
+
+## Delta Lake Optimization
+
+Performance optimizations implemented:
+
+* Partitioning
+* Liquid clustering
+* Optimize
+* Z-Ordering
+* Vacuum
+
+These techniques improve query performance and storage efficiency.
+
+---
+
+# Repository Structure
+
+```
+.
+├── notebooks
+│   ├── Change_Data_Feed.ipynb
+│   ├── Data_Quality_Frameworks.ipynb
+│   ├── Liquid_Clustering_Partitioning.ipynb
+│   ├── Regex_Text_Processing.ipynb
+│   └── Delta_Operations.ipynb
+│
+├── README.md
+```
+
+---
+
+# Implementation
+
+---
+
+# 1 Change Data Feed Implementation
+
+### Create Delta Table with Change Data Feed
+
+```sql
+CREATE TABLE my_files.my_schema.change_feed_data(
+first_name string,
+age long
+)
+using delta
+TBLPROPERTIES(delta.enableChangeDataFeed=true)
+```
+
+### Insert Data
+
+```python
+df=spark.createDataFrame([("bob",23),("sue",98),("jim",27)]).toDF("first_name","age")
+
+df.write.mode("append").format("delta").saveAsTable("my_files.my_schema.change_feed_data")
+```
+
+### View Data
+
+```sql
+select * from my_files.my_schema.change_feed_data
+```
+
+### Delete Record
+
+```sql
+delete from my_files.my_schema.change_feed_data
+where first_name='bob'
+```
+
+### Update Record
+
+```sql
+update my_files.my_schema.change_feed_data
+set age=35
+where first_name='sue'
+```
+
+### Read Change Data Feed
+
+```python
+df=spark.read.format("delta")\
+.option("readChangeFeed","true")\
+.option("startingVersion",0)\
+.table('my_files.my_schema.change_feed_data')
+
+display(df)
+```
+
+---
+
+# 2 Data Quality Framework using DQX
+
+## Install DQX
+
+```python
+%pip install databricks-labs-dqx
+%restart_python
+```
+
+---
+
+## Create Sensor Data Table
+
+```sql
+CREATE TABLE IF NOT EXISTS dqx_demo.dqx.sensor_data (
+sensor_id STRING,
+machine_id STRING,
+sensor_type STRING,
+reading_value DOUBLE,
+reading_timestamp TIMESTAMP,
+calibration_date DATE,
+battery_level INT,
+facility_zone STRING,
+is_active BOOLEAN,
+firmware_version STRING,
+ingest_date DATE
+)
+USING DELTA
+```
+
+---
+
+## Load Sensor Data
+
+```python
+sensor_bronze_data=spark.read.table('dqx_demo.dqx.sensor_data')
+display(sensor_bronze_data.limit(10))
+```
+
+---
+
+## Data Profiling
+
+```python
+from databricks.sdk import WorkspaceClient
+from databricks.labs.dqx.profiler.profiler import DQProfiler
+
+ws=WorkspaceClient()
+profiler=DQProfiler(ws)
+
+summary_stats,profiles=profiler.profile(sensor_bronze_data)
+display(summary_stats)
+```
+
+---
+
+## Generate Data Quality Rules
+
+```python
+from databricks.labs.dqx.profiler.generator import DQGenerator
+
+generator=DQGenerator(ws)
+maintenance_checks=generator.generate_dq_rules(profiles)
+```
+
+---
+
+## Apply Data Quality Checks
+
+```python
+valid_df,quarantined_df=dq_engine.apply_checks_by_metadata_and_split(
+sensor_bronze_data,
+maintenance_checks
+)
+```
+
+---
+
+# Example YAML Data Quality Rules
+
+```yaml
+- criticality: error
+  check:
+    function: is_not_null_and_not_empty
+    for_each_column:
+    - sensor_id
+    - machine_id
+
+- criticality: warn
+  check:
+    function: regex_match
+    arguments:
+      column: machine_id
+      regex: '^MCH-\d{3}$'
+```
+
+---
+
+# 3 Partitioning
+
+Partitioning organizes data into folders for faster query performance.
+
+### Create Partitioned Table
+
+```sql
+CREATE OR REPLACE TABLE my_files.my_schema.part_table1(
+order_id int,
+order_date date,
+country STRING,
+category string,
+amount double
+)
+USING DELTA
+PARTITIONED BY (country,category)
+```
+
+---
+
+# 4 Liquid Clustering
+
+Clustering organizes data within files based on selected columns.
+
+```sql
+CREATE OR REPLACE TABLE my_files.my_schema.cluster_table(
+order_id int,
+order_date date,
+country STRING,
+category string,
+amount double
+)
+USING DELTA
+CLUSTER BY (country,category,order_date)
+```
+
+---
+
+# 5 PySpark Text Processing
+
+Example dataset:
+
+```python
+data=[
+("OrderID :564974",),
+("Invoice # 9821 Processed",),
+("No numbers here",),
+("ref-44965,",)
+]
+
+df=spark.createDataFrame(data,["text_col"])
+display(df)
+```
+
+This demonstrates **extracting structured values from semi-structured text data**.
+
+---
+
+# 6 Delta Lake Operations
+
+### Create Delta Table
+
+```python
+data=[Row(id=1,name='Alice',age=30),
+Row(id=2,name='Bob',age=20),
+Row(id=3,name='Charlie',age=40)]
+
+df=spark.createDataFrame(data)
+
+df.write.format('delta').mode('overwrite').saveAsTable('my_files.my_schema.people_delta_demo')
+```
+
+---
+
+## Schema Evolution
+
+```python
+df.write.format('delta').mode('append')\
+.option('mergeSchema','true')\
+.saveAsTable('my_files.my_schema.people_delta_demo')
+```
+
+---
+
+## Time Travel
+
+```sql
+select * from my_files.my_schema.people_delta_demo
+version as of 2
+```
+
+---
+
+## Restore Table
+
+```sql
+restore my_files.my_schema.people_delta_demo
+version as of 2
+```
+
+---
+
+## Merge (Upsert)
+
+```sql
+MERGE INTO my_files.my_schema.people_delta_demo AS target
+USING update as source
+ON target.id=source.id
+
+WHEN MATCHED THEN
+UPDATE SET target.name=source.name,target.age=source.age
+
+WHEN NOT MATCHED THEN
+INSERT (id,name,age)
+values(source.id,source.name,source.age)
+```
+
+---
+
+# Optimization
+
+### Optimize
+
+```sql
+optimize my_files.my_schema.people_delta_demo
+```
+
+---
+
+### Z-Order
+
+```sql
+optimize my_files.my_schema.people_delta_demo
+zorder by id
+```
+
+---
+
+### Vacuum
+
+```sql
+vacuum my_files.my_schema.people_delta_demo
+```
+
+---
+
+# Key Learnings
+
+Through this project, the following data engineering concepts were implemented:
+
+* Delta Lake table management
+* Incremental processing with Change Data Feed
+* Data quality validation using DQX
+* Data pipeline architecture using Medallion layers
+* Query performance optimization techniques
+* Data transformation using PySpark
+
+---
+
+# Future Improvements
+
+Possible enhancements include:
+
+* Streaming pipelines using Structured Streaming
+* Integration with Kafka
+* Automated orchestration using Airflow
+* Real-time data quality monitoring
+
+---
+
+# Author
+
+MASIREDDY REDDEPPA REDDY
+
+Aspiring Data Engineer focused on building scalable data pipelines using PySpark, Delta Lake, and modern Lakehouse architectures.
+
+---
+
+If you want, I can also give you **a much stronger GitHub README (top 1% level)** with:
+
+* **architecture diagram**
+* **pipeline flow diagram**
+* **project screenshots**
+* **resume-ready project description**
+
+That version can make your **GitHub look like a real Data Engineer portfolio project**.
